@@ -44,7 +44,7 @@ You can always open an issue on Github and I'll try to follow up. If your issue 
 
 The MIT License
 
-Copyright (c) 2014 the AUTHORS
+Copyright (c) 2014 by Laurent Eschenauer <laurent@eschenauer.be>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
