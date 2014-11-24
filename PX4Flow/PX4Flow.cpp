@@ -74,18 +74,32 @@ uint16_t PX4Flow::frame_count() {
   return data.frame_count;
 }
 
-int16_t PX4Flow::altitude() {
-  return data.ground_distance;
+int16_t PX4Flow::pixel_flow_x_sum() {
+  return data.pixel_flow_x_sum;
 }
 
-int16_t PX4Flow::vx() {
+int16_t PX4Flow::pixel_flow_y_sum() {
+  return data.pixel_flow_y_sum;
+}
+
+int16_t PX4Flow::flow_comp_m_x() {
   return data.flow_comp_m_x;
 }
-int16_t PX4Flow::vy() {
+
+int16_t PX4Flow::flow_comp_m_y() {
   return data.flow_comp_m_y;
 }
-int16_t PX4Flow::quality() {
+
+int16_t PX4Flow::qual() {
   return data.qual;
+}
+
+uint8_t PX4Flow::sonar_timestamp() {
+  return data.sonar_timestamp;
+}
+
+int16_t PX4Flow::ground_distance() {
+  return data.ground_distance;
 }
 
 uint16_t PX4Flow::read16() {

@@ -54,10 +54,13 @@ class PX4Flow
     PX4Flow();
     void update();
     uint16_t frame_count();
-    int16_t altitude();
-    int16_t vx();
-    int16_t vy();
-    int16_t quality();
+    int16_t pixel_flow_x_sum();
+    int16_t pixel_flow_y_sum();
+    int16_t flow_comp_m_x();
+    int16_t flow_comp_m_y();
+    int16_t qual();
+    uint8_t sonar_timestamp();
+    int16_t ground_distance();
 
   protected:
     struct i2c_frame data;

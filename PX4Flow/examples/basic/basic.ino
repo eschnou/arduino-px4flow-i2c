@@ -37,9 +37,9 @@ void loop()
   sensor.update();
   
   Serial.print("#");
-  Serial.print(sensor.vx());Serial.print(",");
-  Serial.print(sensor.vy());Serial.print(",");
-  Serial.println(sensor.altitude());
+  Serial.print(sensor.flow_comp_m_x());Serial.print(",");
+  Serial.print(sensor.flow_comp_m_y());Serial.print(",");
+  Serial.println(sensor.ground_distance());
 
   delay(100);
 }
