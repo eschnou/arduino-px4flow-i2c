@@ -8,7 +8,7 @@ A small library wrapping the Wire I2C calls to a [PX4Flow](http://pixhawk.org/mo
 * Add the PX4Flow folder in your arduino libraries (Sketch -> Import Library -> Add Library)
 * Start using it by including "PX4Flow.h" in your project
 
-## Exampe
+## Example
 
 This example is also available in 'examples/basic/basic.ino'.
 
@@ -44,7 +44,7 @@ You can always open an issue on Github and I'll try to follow up. If your issue 
 
 The MIT License
 
-Copyright (c) 2014 the AUTHORS
+Copyright (c) 2014 by Laurent Eschenauer <laurent@eschenauer.be>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
