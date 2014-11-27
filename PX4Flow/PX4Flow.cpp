@@ -25,12 +25,21 @@
 #include <Wire.h>
 #include "PX4Flow.h":
 
-PX4Flow::PX4Flow()
+PX4Flow::PX4Flow(bool p)
 {
-    //TODO Enable to setup a different address when initializing
+    integrate = p;
 }
 
 void PX4Flow::update()
+{
+    if (!integrate) {
+        update_simple();
+    } else {
+        update_integral();
+    }
+}
+
+void PX4Flow::update_simple()
 {
   //send 0x0 to PX4FLOW module and receive back 22 Bytes data 
   Wire.beginTransmission(PX4FLOW_ADDRESS);
@@ -45,18 +54,18 @@ void PX4Flow::update()
   // the loop when no component is connected
   while(Wire.available() < 22);
   
-  data.frame_count       = read16();
-  data.pixel_flow_x_sum  = read16();
-  data.pixel_flow_y_sum  = read16();
-  data.flow_comp_m_x     = read16();
-  data.flow_comp_m_y     = read16();
-  data.qual              = read16();
-  data.gyro_x_rate       = read16();
-  data.gyro_y_rate       = read16();
-  data.gyro_z_rate       = read16();
-  data.gyro_range        = read8();
-  data.sonar_timestamp   = read8();
-  data.ground_distance   = read16();
+  frame.frame_count       = read16();
+  frame.pixel_flow_x_sum  = read16();
+  frame.pixel_flow_y_sum  = read16();
+  frame.flow_comp_m_x     = read16();
+  frame.flow_comp_m_y     = read16();
+  frame.qual              = read16();
+  frame.gyro_x_rate       = read16();
+  frame.gyro_y_rate       = read16();
+  frame.gyro_z_rate       = read16();
+  frame.gyro_range        = read8();
+  frame.sonar_timestamp   = read8();
+  frame.ground_distance   = read16();
   
   // if too many bytes are available, we drain in order to be synched
   // on next read
@@ -70,36 +79,126 @@ void PX4Flow::update()
   }
 }
 
+void PX4Flow::update_integral()
+{
+  //send 0x16 to PX4FLOW module and receive back 25 Bytes data 
+  Wire.beginTransmission(PX4FLOW_ADDRESS);
+  Wire.write(0x16);  
+  Wire.endTransmission();  
+  
+  // request 25 bytes from the module
+  Wire.requestFrom(PX4FLOW_ADDRESS, 25);    
+
+  // wait for all data to be available
+  // TODO we could manage a timeout in order not to block
+  // the loop when no component is connected
+  while(Wire.available() < 25);
+  
+  iframe.frame_count_since_last_readout = read16();
+  iframe.pixel_flow_x_integral  = read16();
+  iframe.pixel_flow_y_integral  = read16();
+  iframe.gyro_x_rate_integral   = read16();
+  iframe.gyro_y_rate_integral   = read16();
+  iframe.gyro_z_rate_integral   = read16();
+  iframe.integration_timespan   = read32();
+  iframe.sonar_timestamp        = read32();
+  iframe.ground_distance        = read16();
+  iframe.gyro_temperature       = read16();
+  iframe.quality                = read8();
+  
+  // if too many bytes are available, we drain in order to be synched
+  // on next read
+  if(Wire.available()) {
+    #if PX4FLOW_DEBUG == true
+    {
+      Serial.println("ERROR [PX4Flow] : Too many bytes available.");
+    }
+    #endif
+    while(Wire.available()) {Wire.read();}
+  }
+}
+
+// Simple frame
 uint16_t PX4Flow::frame_count() {
-  return data.frame_count;
+  return frame.frame_count;
 }
 
 int16_t PX4Flow::pixel_flow_x_sum() {
-  return data.pixel_flow_x_sum;
+  return frame.pixel_flow_x_sum;
 }
 
 int16_t PX4Flow::pixel_flow_y_sum() {
-  return data.pixel_flow_y_sum;
+  return frame.pixel_flow_y_sum;
 }
 
 int16_t PX4Flow::flow_comp_m_x() {
-  return data.flow_comp_m_x;
+  return frame.flow_comp_m_x;
 }
 
 int16_t PX4Flow::flow_comp_m_y() {
-  return data.flow_comp_m_y;
+  return frame.flow_comp_m_y;
 }
 
 int16_t PX4Flow::qual() {
-  return data.qual;
+  return frame.qual;
 }
 
 uint8_t PX4Flow::sonar_timestamp() {
-  return data.sonar_timestamp;
+  return frame.sonar_timestamp;
 }
 
 int16_t PX4Flow::ground_distance() {
-  return data.ground_distance;
+  return frame.ground_distance;
+}
+
+// Integral frame
+uint16_t PX4Flow::frame_count_since_last_readout() {
+  return iframe.frame_count_since_last_readout;
+}
+
+int16_t PX4Flow::pixel_flow_x_integral() {
+  return iframe.pixel_flow_x_integral;
+}
+
+int16_t PX4Flow::pixel_flow_y_integral() {
+  return iframe.pixel_flow_y_integral;
+}
+
+int16_t PX4Flow::gyro_x_rate_integral() {
+  return iframe.gyro_x_rate_integral;
+}
+
+int16_t PX4Flow::gyro_y_rate_integral() {
+  return iframe.gyro_y_rate_integral;
+}
+
+int16_t PX4Flow::gyro_z_rate_integral() {
+  return iframe.gyro_z_rate_integral;
+}
+
+uint32_t PX4Flow::integration_timespan() {
+  return iframe.integration_timespan;
+}
+
+uint32_t PX4Flow::sonar_timestamp_integral() {
+  return iframe.sonar_timestamp;
+}
+      
+int16_t PX4Flow::ground_distance_integral() {
+  return iframe.ground_distance;
+}
+
+int16_t PX4Flow::gyro_temperature() {
+  return iframe.gyro_temperature;
+}
+
+uint8_t PX4Flow::quality_integral() {
+  return iframe.quality;
+}
+
+// Protected
+uint32_t PX4Flow::read32() {
+  return (uint32_t) read16() + (uint32_t) (read16() << 16);
 }
 
 uint16_t PX4Flow::read16() {

@@ -48,11 +48,28 @@ typedef struct i2c_frame
     int16_t ground_distance;// Ground distance in meters*1000. Positive value: distance known. Negative value: Unknown distance
 } i2c_frame;
 
+typedef struct i2c_integral_frame
+{
+    uint16_t frame_count_since_last_readout;//number of flow measurements since last I2C readout [#frames]
+    int16_t pixel_flow_x_integral;//accumulated flow in radians*10000 around x axis since last I2C readout [rad*10000]
+    int16_t pixel_flow_y_integral;//accumulated flow in radians*10000 around y axis since last I2C readout [rad*10000]
+    int16_t gyro_x_rate_integral;//accumulated gyro x rates in radians*10000 since last I2C readout [rad*10000] 
+    int16_t gyro_y_rate_integral;//accumulated gyro y rates in radians*10000 since last I2C readout [rad*10000] 
+    int16_t gyro_z_rate_integral;//accumulated gyro z rates in radians*10000 since last I2C readout [rad*10000] 
+    uint32_t integration_timespan;//accumulation timespan in microseconds since last I2C readout [microseconds]
+    uint32_t sonar_timestamp;// time since last sonar update [microseconds]
+    int16_t ground_distance;// Ground distance in meters*1000 [meters*1000]
+    int16_t gyro_temperature;// Temperature * 100 in centi-degrees Celsius [degcelsius*100]
+    uint8_t quality;// averaged quality of accumulated flow values [0:bad quality;255: max quality]
+} i2c_integral_frame;
+
 class PX4Flow
 {
   public:
-    PX4Flow();
+    PX4Flow(bool p_integrate = false);
     void update();
+
+    // Simple frame
     uint16_t frame_count();
     int16_t pixel_flow_x_sum();
     int16_t pixel_flow_y_sum();
@@ -62,10 +79,29 @@ class PX4Flow
     uint8_t sonar_timestamp();
     int16_t ground_distance();
 
+    // Integral frame
+    uint16_t frame_count_since_last_readout();
+    int16_t pixel_flow_x_integral();
+    int16_t pixel_flow_y_integral();
+    int16_t gyro_x_rate_integral();
+    int16_t gyro_y_rate_integral();
+    int16_t gyro_z_rate_integral();
+    uint32_t integration_timespan();
+    uint32_t sonar_timestamp_integral();
+    int16_t ground_distance_integral();
+    int16_t gyro_temperature();
+    uint8_t quality_integral();
+
+
   protected:
-    struct i2c_frame data;
+    struct i2c_frame frame;
+    struct i2c_integral_frame iframe;
+    bool integrate = false;
+    uint32_t read32();
     uint16_t read16();
     uint8_t read8();
+    void update_simple();
+    void update_integral();
 };
 
 #endif
