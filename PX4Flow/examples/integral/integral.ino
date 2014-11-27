@@ -41,7 +41,7 @@ void loop()
   Serial.print(sensor.frame_count_since_last_readout());Serial.print(",");
   Serial.print(sensor.pixel_flow_x_integral());Serial.print(",");
   Serial.print(sensor.pixel_flow_y_integral());Serial.print(",");
-  Serial.println(sensor.ground_distance());
+  Serial.println(sensor.ground_distance_integral());
 
   delay(100);
 }
