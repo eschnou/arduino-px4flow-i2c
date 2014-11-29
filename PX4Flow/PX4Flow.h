@@ -66,8 +66,9 @@ typedef struct i2c_integral_frame
 class PX4Flow
 {
   public:
-    PX4Flow(bool p_integrate = false);
+    PX4Flow();
     void update();
+    void update_integral();
 
     // Simple frame
     uint16_t frame_count();
@@ -75,6 +76,9 @@ class PX4Flow
     int16_t pixel_flow_y_sum();
     int16_t flow_comp_m_x();
     int16_t flow_comp_m_y();
+    int16_t gyro_x_rate();
+    int16_t gyro_y_rate();
+    int16_t gyro_z_rate();
     int16_t qual();
     uint8_t sonar_timestamp();
     int16_t ground_distance();
@@ -96,12 +100,9 @@ class PX4Flow
   protected:
     struct i2c_frame frame;
     struct i2c_integral_frame iframe;
-    bool integrate = false;
     uint32_t read32();
     uint16_t read16();
     uint8_t read8();
-    void update_simple();
-    void update_integral();
 };
 
 #endif

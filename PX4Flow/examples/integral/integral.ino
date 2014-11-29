@@ -24,25 +24,68 @@
 #include <Wire.h>
 #include "PX4Flow.h"
 
-PX4Flow sensor = PX4Flow(true); // True to force integral mode 
+#define PARAM_FOCAL_LENGTH_MM 16
+
+// Pin 13 has an LED connected on most Arduino boards.
+// Pin 11 has the LED on Teensy 2.0
+// Pin 6  has the LED on Teensy++ 2.0
+// Pin 13 has the LED on Teensy 3.0
+// give it a name:
+#define LED 13
+
+long last_check = 0;
+float focal_length_px = (PARAM_FOCAL_LENGTH_MM) / (4.0f * 6.0f) * 1000.0f;
+  
+// Initialize PX4Flow library
+PX4Flow sensor = PX4Flow(); 
 
 void setup()
 {
+  // Initialize the digital pin as an output.
+  pinMode(LED, OUTPUT);   
+  
+  // Initialize the I2C bus
   Wire.begin();       
+  
+  // Initialize the serial connection
   Serial.begin(115200);  
 }
 
 void loop()
 {
-  sensor.update();
-  
-  Serial.print("#");
-  Serial.print(millis());Serial.print(",");
-  Serial.print(sensor.frame_count_since_last_readout());Serial.print(",");
-  Serial.print(sensor.pixel_flow_x_integral());Serial.print(",");
-  Serial.print(sensor.pixel_flow_y_integral());Serial.print(",");
-  Serial.println(sensor.ground_distance_integral());
-
-  delay(100);
+  long loop_start = millis();
+  if (loop_start - last_check > 100) {
+    // Fetch I2C data  
+    sensor.update_integral();
+    float x_rate = sensor.gyro_x_rate_integral() / 10.0f;       // mrad
+    float y_rate = sensor.gyro_y_rate_integral() / 10.0f;       // mrad
+    float flow_x = sensor.pixel_flow_x_integral() / 10.0f;      // mrad
+    float flow_y = sensor.pixel_flow_y_integral() / 10.0f;      // mrad  
+    int timespan = sensor.integration_timespan();               // microseconds
+    int ground_distance = sensor.ground_distance_integral();    // mm
+    
+    // Update flow rate with gyro rate
+    float pixel_x = flow_x + x_rate; // mrad
+    float pixel_y = flow_y + y_rate; // mrad
+    
+    // Scale based on ground distance and compute speed
+    // (flow/1000) * (ground_distance/1000) / (timespan/1000000)
+    float velocity_x = pixel_x * ground_distance / timespan;     // m/s
+    float velocity_y = pixel_y * ground_distance / timespan;     // m/s 
+    
+    // Output some data
+    Serial.print(millis());Serial.print(",");  
+    Serial.print(x_rate);Serial.print(",");
+    Serial.print(y_rate);Serial.print(",");  
+    Serial.print(flow_x);Serial.print(",");
+    Serial.print(flow_y);Serial.print(","); 
+    Serial.print(pixel_x);Serial.print(",");
+    Serial.print(pixel_y);Serial.print(",");  
+    Serial.print(velocity_x);Serial.print(",");
+    Serial.print(velocity_y);Serial.print(",");
+    Serial.println(ground_distance);
+    
+    last_check = loop_start;
+  }
 }
 

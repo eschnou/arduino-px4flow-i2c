@@ -25,21 +25,11 @@
 #include <Wire.h>
 #include "PX4Flow.h":
 
-PX4Flow::PX4Flow(bool p)
+PX4Flow::PX4Flow()
 {
-    integrate = p;
 }
 
 void PX4Flow::update()
-{
-    if (!integrate) {
-        update_simple();
-    } else {
-        update_integral();
-    }
-}
-
-void PX4Flow::update_simple()
 {
   //send 0x0 to PX4FLOW module and receive back 22 Bytes data 
   Wire.beginTransmission(PX4FLOW_ADDRESS);
@@ -137,6 +127,18 @@ int16_t PX4Flow::flow_comp_m_x() {
 
 int16_t PX4Flow::flow_comp_m_y() {
   return frame.flow_comp_m_y;
+}
+
+int16_t PX4Flow::gyro_x_rate() {
+  return frame.gyro_x_rate;
+}
+
+int16_t PX4Flow::gyro_y_rate() {
+  return frame.gyro_y_rate;
+}
+
+int16_t PX4Flow::gyro_z_rate() {
+  return frame.gyro_z_rate;
 }
 
 int16_t PX4Flow::qual() {
