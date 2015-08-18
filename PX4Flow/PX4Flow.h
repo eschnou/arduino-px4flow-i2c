@@ -27,8 +27,11 @@
 // 7 Bit I2C Address of the Flow Module: Default 0x42 (user selectable bits 0,1,2) 
 #define PX4FLOW_ADDRESS 0x42
 
+// timeout in milliseconds for PX4Flow read
+#define PX4FLOW_TIMEOUT 10
+
 // If set to true, will print error messages on Serial
-#define DEBUG false
+#define PX4FLOW_DEBUG true
 
 // As described in the documentation
 // http://pixhawk.org/modules/px4flow
@@ -67,8 +70,8 @@ class PX4Flow
 {
   public:
     PX4Flow();
-    void update();
-    void update_integral();
+    bool update();
+    bool update_integral();
 
     // Simple frame
     uint16_t frame_count();
@@ -103,6 +106,7 @@ class PX4Flow
     uint32_t read32();
     uint16_t read16();
     uint8_t read8();
+    bool wait(int count);
 };
 
 #endif

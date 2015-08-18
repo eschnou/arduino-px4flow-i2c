@@ -29,7 +29,7 @@ PX4Flow::PX4Flow()
 {
 }
 
-void PX4Flow::update()
+bool PX4Flow::update()
 {
   //send 0x0 to PX4FLOW module and receive back 22 Bytes data 
   Wire.beginTransmission(PX4FLOW_ADDRESS);
@@ -40,10 +40,11 @@ void PX4Flow::update()
   Wire.requestFrom(PX4FLOW_ADDRESS, 22);    
 
   // wait for all data to be available
-  // TODO we could manage a timeout in order not to block
-  // the loop when no component is connected
-  while(Wire.available() < 22);
-  
+  if (!wait(22)) {
+      return false;
+  }
+
+  // read the data
   frame.frame_count       = read16();
   frame.pixel_flow_x_sum  = read16();
   frame.pixel_flow_y_sum  = read16();
@@ -67,9 +68,11 @@ void PX4Flow::update()
     #endif
     while(Wire.available()) {Wire.read();}
   }
+
+  return true;
 }
 
-void PX4Flow::update_integral()
+bool PX4Flow::update_integral()
 {
   //send 0x16 to PX4FLOW module and receive back 25 Bytes data 
   Wire.beginTransmission(PX4FLOW_ADDRESS);
@@ -77,13 +80,16 @@ void PX4Flow::update_integral()
   Wire.endTransmission();  
   
   // request 25 bytes from the module
-  Wire.requestFrom(PX4FLOW_ADDRESS, 25);    
+  Wire.requestFrom(PX4FLOW_ADDRESS, 26);    
 
   // wait for all data to be available
   // TODO we could manage a timeout in order not to block
   // the loop when no component is connected
-  while(Wire.available() < 25);
+  if (!wait(26)) {
+      return false;
+  }
   
+  // read the data
   iframe.frame_count_since_last_readout = read16();
   iframe.pixel_flow_x_integral  = read16();
   iframe.pixel_flow_y_integral  = read16();
@@ -95,6 +101,10 @@ void PX4Flow::update_integral()
   iframe.ground_distance        = read16();
   iframe.gyro_temperature       = read16();
   iframe.quality                = read8();
+
+  // This is due to the lack of structure packing
+  // in the PX4Flow code.
+  read8();
   
   // if too many bytes are available, we drain in order to be synched
   // on next read
@@ -106,6 +116,8 @@ void PX4Flow::update_integral()
     #endif
     while(Wire.available()) {Wire.read();}
   }
+
+  return true;
 }
 
 // Simple frame
@@ -209,4 +221,20 @@ uint16_t PX4Flow::read16() {
 
 uint8_t PX4Flow::read8() {
   return Wire.read();
+}
+
+bool PX4Flow::wait(int count) {
+  unsigned long now = millis();
+  while(Wire.available() < count) {
+    if ((millis() - now) > PX4FLOW_TIMEOUT) {
+      #if PX4FLOW_DEBUG == true
+        {
+          Serial.println("ERROR [PX4Flow] : Timeout reading PX4_Flow.");
+        }
+      #endif
+      return false;
+    }
+    delay(1);
+  }
+  return true;
 }

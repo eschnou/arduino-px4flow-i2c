@@ -2,6 +2,13 @@
 
 A small library wrapping the Wire I2C calls to a [PX4Flow](http://pixhawk.org/modules/px4flow) Optical Flow Tracker.
 
+## Requirements
+
+The PX4Flow firmware keeps on evolving and sometimes introduce backward incompatible changes. If you have purchased a PX4Flow module online, make sure to first install the latest firmware.
+
+This library has last been tested on August 18th with the PX4Flow firmware built from the master, at the following
+commit: https://github.com/PX4/Flow/commit/5f014d3576793c5c32c04dbad8c7ebb284aba24c
+
 ## Usage
 
 * Clone this repository on your local system

@@ -56,26 +56,52 @@ void setup()
 void loop()
 {
   long loop_start = millis();
-    
-  if (loop_start - last_check > 10) {
+  
+  while (Serial.available() > 0) {
+    if (Serial.read() == 'r') {
+      Serial.println("Reset");
+      px = 0;
+      py = 0;
+    }
+  }
+  
+  if (loop_start - last_check > 100) {
     // Fetch I2C data  
     sensor.update_integral();
-    int x_rate = sensor.gyro_x_rate_integral();       // 10 * mrad
-    int y_rate = sensor.gyro_y_rate_integral();       // 10 * mrad
-    int flow_x = sensor.pixel_flow_x_integral();      // 10 * mrad
-    int flow_y = sensor.pixel_flow_y_integral();      // 10 * mrad  
-    int timespan = sensor.integration_timespan(); // microseconds
-    int ground_distance = sensor.ground_distance_integral(); // mm
+    x_rate = sensor.gyro_x_rate_integral() / 10.0f;       // mrad
+    y_rate = sensor.gyro_y_rate_integral() / 10.0f;       // mrad
+    flow_x = sensor.pixel_flow_x_integral() / 10.0f;      // mrad
+    flow_y = sensor.pixel_flow_y_integral() / 10.0f;      // mrad  
+    int timespan = sensor.integration_timespan();               // microseconds
+    int ground_distance = sensor.ground_distance_integral();    // mm
     int quality = sensor.quality_integral();
     
-    Serial.print(millis());Serial.print("\t");  
-    Serial.print(quality);Serial.print("\t");    
-    Serial.print(x_rate);Serial.print("\t");
-    Serial.print(y_rate);Serial.print("\t");  
-    Serial.print(flow_x);Serial.print("\t");
-    Serial.print(flow_y);Serial.print("\t"); 
-    Serial.println(ground_distance);
+    if (quality > 100)
+    {
+      // Update flow rate with gyro rate
+      float pixel_x = flow_x + x_rate; // mrad
+      float pixel_y = flow_y + y_rate; // mrad
+      
+      // Scale based on ground distance and compute speed
+      // (flow/1000) * (ground_distance/1000) / (timespan/1000000)
+      float velocity_x = pixel_x * ground_distance / timespan;     // m/s
+      float velocity_y = pixel_y * ground_distance / timespan;     // m/s 
+      
+      // Integrate velocity to get pose estimate
+      px = px + velocity_x * 100;
+      py = py + velocity_y * 100;
+          
+      // Output some data
+      Serial.print(millis());Serial.print(",");  
+      Serial.print(px);Serial.print("\t");
+      Serial.print(py);Serial.print("\t");    
+      Serial.println(ground_distance);
+    }
+    else {
+      Serial.println(".");
+    }
     
     last_check = loop_start;
   }
 }
+
