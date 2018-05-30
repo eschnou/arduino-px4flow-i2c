@@ -12,7 +12,7 @@ commit: https://github.com/PX4/Flow/commit/5f014d3576793c5c32c04dbad8c7ebb284aba
 ## Usage
 
 * Clone this repository on your local system
-* Add the PX4Flow folder in your arduino libraries (Sketch -> Import Library -> Add Library)
+* Add the arduino-px4flow-i2c folder in your arduino libraries (Sketch -> Import Library -> Add Library)
 * Start using it by including "PX4Flow.h" in your project
 
 ## Example
