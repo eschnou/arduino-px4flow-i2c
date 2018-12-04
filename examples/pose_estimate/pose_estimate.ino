@@ -32,7 +32,7 @@
 // Pin 13 has the LED on Teensy 3.0
 // give it a name:
 #define LED 13
-
+#define PX4FLOW_RATE 100
 long last_check = 0;
 int px = 0;
 int py = 0;
@@ -65,7 +65,7 @@ void loop()
     }
   }
   
-  if (loop_start - last_check > 100) {
+  if (loop_start - last_check > PX4FLOW_RATE) {
     // Fetch I2C data  
     sensor.update_integral();
     x_rate = sensor.gyro_x_rate_integral() / 10.0f;       // mrad
@@ -79,8 +79,8 @@ void loop()
     if (quality > 100)
     {
       // Update flow rate with gyro rate
-      float pixel_x = flow_x + x_rate; // mrad
-      float pixel_y = flow_y + y_rate; // mrad
+      float pixel_x = flow_x - x_rate; // mrad
+      float pixel_y = flow_y - y_rate; // mrad
       
       // Scale based on ground distance and compute speed
       // (flow/1000) * (ground_distance/1000) / (timespan/1000000)
@@ -88,8 +88,8 @@ void loop()
       float velocity_y = pixel_y * ground_distance / timespan;     // m/s 
       
       // Integrate velocity to get pose estimate
-      px = px + velocity_x * 100;
-      py = py + velocity_y * 100;
+      px = px + velocity_x * PX4FLOW_RATE;
+      py = py + velocity_y * PX4FLOW_RATE;
           
       // Output some data
       Serial.print(millis());Serial.print(",");  
